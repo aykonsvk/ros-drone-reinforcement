@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+
+  <include file="$(find reinforcement_drone)/launch/start_world.launch"/>
+  <include file="$(find reinforcement_drone)/launch/put_robot_in_world.launch"/>
+
+</launch>
