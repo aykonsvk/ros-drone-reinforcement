@@ -1,19 +1,14 @@
 <launch>
     <arg name="world_name" default="$(find reinforcement_drone)/worlds/line.world"/>
 
-    <!-- <arg name="world_name" default="$(find drone_v0)/worlds/demo_line.world"/> -->
-    <arg name="put_robot_in_world" default="false" />
-    <arg name="put_robot_in_world_package" default="" />
-    <arg name="put_robot_in_world_launch" default="" />
-
     <arg name="x" default="0.0" />
     <arg name="y" default="0.0" />
-    <arg name="z" default="0.0" />
+    <arg name="z" default="10.0" />
     <arg name="roll" default="0.0"/>
     <arg name="pitch" default="0.0"/>
     <arg name="yaw" default="0.0"/>
 
-	<arg name="paused" default="false"/>
+	<arg name="paused" default="true"/>
 	<arg name="use_sim_time" default="true"/>
 	<arg name="gui" default="true"/>
 	<arg name="headless" default="false"/>
@@ -30,16 +25,5 @@
 		<arg name="headless" value="$(arg headless)"/>
 		<arg name="verbose" value="$(arg verbose)" />
 	</include>
-
-    <group if="$(arg put_robot_in_world)">
-        <include file="$(eval find(put_robot_in_world_package) + '/launch/' + put_robot_in_world_launch)">
-            <arg name="x" value="$(arg x)" />
-            <arg name="y" value="$(arg y)" />
-            <arg name="z" value="$(arg z)" />
-            <arg name="roll" value="$(arg roll)"/>
-            <arg name="pitch" value="$(arg pitch)"/>
-            <arg name="yaw" value="$(arg yaw)" />
-        </include>
-    </group>
 
 </launch>
