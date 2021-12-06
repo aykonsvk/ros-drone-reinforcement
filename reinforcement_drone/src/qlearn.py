@@ -61,7 +61,6 @@ class QLearn:
         self.learnQ(state1, action1, reward, reward + self.gamma*maxqnew)
 
     def save(self, filename):
-        print("SAVING FILE in ="+str(filename))
         np.save(filename, self.q)
 
     def load(self, filename):

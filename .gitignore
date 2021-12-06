@@ -3,6 +3,7 @@ dev_notes.md
 drone_v0/*
 
 
-reinforcement_drone/src/training_results/qlearn/left_right/*
+reinforcement_drone/training_results/qlearn/left_right/*
 
 */__pycache__/*
+*.pyc

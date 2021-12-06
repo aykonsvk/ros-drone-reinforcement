@@ -4,11 +4,12 @@ drone: #namespace
     gamma: 0.7
     epsilon: 0.9
     epsilon_discount: 0.999
-    nepisodes: 20
-    nsteps: 20
+    nepisodes: 100
+    nsteps: 100
+    check_rate: 10
 
 
-    n_actions: 6 # We have 3 actions, Forwards,TurnLeft,TurnRight, STOP
+    n_actions: 3 # We have 3 actions, TurnLeft,TurnRight, STOP
 
     linear_forward_speed: 0.5 # Spwwed for ging fowards
     angular_turn_speed: 0.05 # Angular speed when turning

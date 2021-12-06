@@ -13,6 +13,7 @@ from sensor_msgs.msg import Range
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Pose
 from std_msgs.msg import Empty
+from tf.transformations import euler_from_quaternion
 
 class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
 
@@ -492,3 +493,117 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
 
     def get_gt_vel(self):
         return self.gt_vel
+
+    def get_orientation_euler(self, quaternion_vector):
+        # We convert from quaternions to euler
+        orientation_list = [quaternion_vector.x,
+                            quaternion_vector.y,
+                            quaternion_vector.z,
+                            quaternion_vector.w]
+
+        roll, pitch, yaw = euler_from_quaternion(orientation_list)
+        return roll, pitch, yaw
+
+    def fix_yaw_drift(self, min, max):
+        current_gt_pose = self._check_gt_pose_ready()
+        _,_,current_yaw = self.get_orientation_euler(current_gt_pose.orientation)
+        
+        if current_yaw > min and current_yaw < max:
+            return
+        
+
+        rospy.logwarn('Fixing YAW')
+        rate = rospy.Rate(10)
+        cmd_vel_value = Twist()
+        self._check_cmd_vel_pub_connection()
+        self._cmd_vel_pub.publish(cmd_vel_value)
+        
+        while current_yaw <= min or current_yaw >= max:
+            if current_yaw <= min:
+                cmd_vel_value.angular.z = 0.5
+            else:
+                cmd_vel_value.angular.z = -0.5
+
+
+            self._check_cmd_vel_pub_connection()
+            self._cmd_vel_pub.publish(cmd_vel_value)
+            rate.sleep()
+            current_gt_pose = self._check_gt_pose_ready()
+            _,_,current_yaw = self.get_orientation_euler(current_gt_pose.orientation)
+        
+        #Stop Drone
+        cmd_vel_value = Twist()
+        self._check_cmd_vel_pub_connection()
+        self._cmd_vel_pub.publish(cmd_vel_value)
+        rate.sleep()
+
+    def fix_vertical_drift(self, min, max):
+        current_gt_pose = self._check_gt_pose_ready()
+        current_height = current_gt_pose.position.z
+        if current_height > min and current_height < max:
+            return
+
+        rospy.logwarn('Fixing Height')
+        rate = rospy.Rate(10)
+        cmd_vel_value = Twist()
+        self._check_cmd_vel_pub_connection()
+        self._cmd_vel_pub.publish(cmd_vel_value)
+        input('Fixing HEIGHT...')
+
+
+        while current_height <= min or current_height >= max:
+            if current_height <= min:
+                cmd_vel_value.linear.z = 0.5
+            else:
+                cmd_vel_value.linear.z = -0.5
+
+
+            self._check_cmd_vel_pub_connection()
+            self._cmd_vel_pub.publish(cmd_vel_value)
+            rate.sleep()
+            current_gt_pose = self._check_gt_pose_ready()
+            current_height = current_gt_pose.position.z
+        
+        #Stop Drone
+        cmd_vel_value = Twist()
+        self._check_cmd_vel_pub_connection()
+        self._cmd_vel_pub.publish(cmd_vel_value)
+        rate.sleep()
+
+        input('Fixed!...')
+
+    def fix_x_drift(self, min, max):
+        current_gt_pose = self._check_gt_pose_ready()
+        current_x= current_gt_pose.position.x
+        if current_x > min and current_x < max:
+            return
+
+        rospy.logwarn('Fixing X')
+        rate = rospy.Rate(10)
+        cmd_vel_value = Twist()
+        self._check_cmd_vel_pub_connection()
+        self._cmd_vel_pub.publish(cmd_vel_value)
+        input('Fixing X...')
+
+
+        while current_x <= min or current_x >= max:
+            if current_x <= min:
+                cmd_vel_value.linear.x = 0.5
+            else:
+                cmd_vel_value.linear.x = -0.5
+
+
+            self._check_cmd_vel_pub_connection()
+            self._cmd_vel_pub.publish(cmd_vel_value)
+            rate.sleep()
+            current_gt_pose = self._check_gt_pose_ready()
+            current_x = current_gt_pose.position.x
+        
+        #Stop Drone
+        cmd_vel_value = Twist()
+        self._check_cmd_vel_pub_connection()
+        self._cmd_vel_pub.publish(cmd_vel_value)
+        rate.sleep()
+
+        input('Fixed!...')
+

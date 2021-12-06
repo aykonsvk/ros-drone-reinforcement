@@ -5,7 +5,6 @@ from robot_env import drone_env
 from gym.envs.registration import register
 from geometry_msgs.msg import Point
 from geometry_msgs.msg import Vector3
-from tf.transformations import euler_from_quaternion
 
 class LeftRightLineFollowEnv(drone_env.DroneEnv):
 
@@ -145,6 +144,7 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         """
 
         rospy.logdebug("Start Set Action ==>"+str(action))
+        self.fix_all_driffting()
         # We convert the actions to speed movements to send to the parent class of Parrot
         linear_speed_vector = Vector3()
         angular_speed = 0.0
@@ -155,6 +155,10 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         elif action == 1:  # STRAFE_RIGHT
             linear_speed_vector.y = -1*self.linear_forward_speed
             self.last_action = "STRAFE_RIGHT"
+        elif action == 2:  # STOP
+            # linear_speed_vector.y = -1*self.linear_forward_speed
+            self.last_action = "STOP"
+        
 
         # We tell drone the linear and angular speed to set to execute
         self.move_base(linear_speed_vector,
@@ -429,12 +433,9 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
 
         return distance
 
-    def get_orientation_euler(self, quaternion_vector):
-        # We convert from quaternions to euler
-        orientation_list = [quaternion_vector.x,
-                            quaternion_vector.y,
-                            quaternion_vector.z,
-                            quaternion_vector.w]
+    def fix_all_driffting(self):
+        self.fix_yaw_drift(-0.1, 0.1)
 
-        roll, pitch, yaw = euler_from_quaternion(orientation_list)
-        return roll, pitch, yaw
+        self.fix_vertical_drift(self.work_space_z_min + 1, self.work_space_z_max - 1)
+
+        self.fix_x_drift(self.work_space_x_min + 1, self.work_space_x_max - 1)
