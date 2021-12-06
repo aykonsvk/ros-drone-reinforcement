@@ -8,8 +8,6 @@ from geometry_msgs.msg import Vector3
 
 class LeftRightLineFollowEnv(drone_env.DroneEnv):
 
-    max_episode_steps = 10
-
     register(
             id='LeftRightLineFollowEnv-v0',
             entry_point='task_env.left_right_line_follow:LeftRightLineFollowEnv',
@@ -164,7 +162,7 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         self.move_base(linear_speed_vector,
                        angular_speed,
                        epsilon=0.05,
-                       update_rate=10)
+                       update_rate=60)
 
         rospy.logdebug("END Set Action ==>"+str(action))
 

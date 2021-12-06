@@ -235,7 +235,7 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
 
     def _check_cmd_vel_pub_connection(self):
 
-        rate = rospy.Rate(10)  # 10hz
+        rate = rospy.Rate(60)  # 10hz
         while self._cmd_vel_pub.get_num_connections() == 0 and not rospy.is_shutdown():
             rospy.logdebug(
                 "No susbribers to _cmd_vel_pub yet so we wait and try again")
@@ -250,7 +250,7 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
 
     def _check_takeoff_pub_connection(self):
 
-        rate = rospy.Rate(10)  # 10hz
+        rate = rospy.Rate(60)  # 10hz
         while self._takeoff_pub.get_num_connections() == 0 and not rospy.is_shutdown():
             rospy.logdebug(
                 "No susbribers to _takeoff_pub yet so we wait and try again")
@@ -265,7 +265,7 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
 
     def _check_land_pub_connection(self):
 
-        rate = rospy.Rate(10)  # 10hz
+        rate = rospy.Rate(60)  # 10hz
         while self._land_pub.get_num_connections() == 0 and not rospy.is_shutdown():
             rospy.logdebug(
                 "No susbribers to _land_pub yet so we wait and try again")
@@ -417,7 +417,7 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
         a way to know if its moving in the direction desired, because it would need
         to evaluate the diference in position and speed on the local reference.
         """
-        time.sleep(1.0)
+        time.sleep(0.20)
 
     def wait_until_twist_achieved(self, cmd_vel_value, epsilon, update_rate):
         """
@@ -513,7 +513,7 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
         
 
         rospy.logwarn('Fixing YAW')
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(60)
         cmd_vel_value = Twist()
         self._check_cmd_vel_pub_connection()
         self._cmd_vel_pub.publish(cmd_vel_value)
@@ -543,19 +543,17 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
         if current_height > min and current_height < max:
             return
 
-        rospy.logwarn('Fixing Height')
-        rate = rospy.Rate(10)
+        rospy.logerr('Fixing Height')
+        rate = rospy.Rate(60)
         cmd_vel_value = Twist()
         self._check_cmd_vel_pub_connection()
         self._cmd_vel_pub.publish(cmd_vel_value)
-        input('Fixing HEIGHT...')
-
 
         while current_height <= min or current_height >= max:
             if current_height <= min:
-                cmd_vel_value.linear.z = 0.5
+                cmd_vel_value.linear.z = 1.5
             else:
-                cmd_vel_value.linear.z = -0.5
+                cmd_vel_value.linear.z = -1.5
 
 
             self._check_cmd_vel_pub_connection()
@@ -570,21 +568,17 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
         self._cmd_vel_pub.publish(cmd_vel_value)
         rate.sleep()
 
-        input('Fixed!...')
-
     def fix_x_drift(self, min, max):
         current_gt_pose = self._check_gt_pose_ready()
         current_x= current_gt_pose.position.x
         if current_x > min and current_x < max:
             return
 
-        rospy.logwarn('Fixing X')
-        rate = rospy.Rate(10)
+        rospy.logerr('Fixing X')
+        rate = rospy.Rate(60)
         cmd_vel_value = Twist()
         self._check_cmd_vel_pub_connection()
         self._cmd_vel_pub.publish(cmd_vel_value)
-        input('Fixing X...')
-
 
         while current_x <= min or current_x >= max:
             if current_x <= min:
@@ -604,6 +598,4 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
         self._check_cmd_vel_pub_connection()
         self._cmd_vel_pub.publish(cmd_vel_value)
         rate.sleep()
-
-        input('Fixed!...')
 

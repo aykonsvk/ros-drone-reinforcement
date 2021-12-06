@@ -4,9 +4,9 @@ drone: #namespace
     gamma: 0.7
     epsilon: 0.9
     epsilon_discount: 0.999
-    nepisodes: 100
-    nsteps: 100
-    check_rate: 10
+    nepisodes: 500
+    nsteps: 500
+    check_rate: 20
 
 
     n_actions: 3 # We have 3 actions, TurnLeft,TurnRight, STOP
@@ -30,7 +30,7 @@ drone: #namespace
       x_max: -2.0
       x_min: -8.0
       y_max: 2.0
-      y_min: -27.0
+      y_min: -17.0
       z_max: 5.0
       z_min: 1.5
 
@@ -40,7 +40,7 @@ drone: #namespace
 
     desired_pose:
       x: -5.0
-      y: -25.0
+      y: -15.0
       z: 3.0
 
 

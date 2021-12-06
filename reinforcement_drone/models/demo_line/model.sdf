@@ -24,7 +24,7 @@
         <geometry>
           <cylinder>
             <radius>0.1</radius>
-            <length>25</length>
+            <length>15</length>
           </cylinder>
         </geometry>
         <material>
@@ -51,7 +51,7 @@
         <geometry>
           <cylinder>
             <radius>0.1</radius>
-            <length>25</length>
+            <length>10</length>
           </cylinder>
         </geometry>
         <surface>

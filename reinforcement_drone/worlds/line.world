@@ -14,9 +14,9 @@
       <direction>-0.5 0.1 -0.9</direction>
     </light>
     <physics type="ode">
-      <max_step_size>0.001</max_step_size>
-      <real_time_factor>1</real_time_factor>
-      <real_time_update_rate>1000</real_time_update_rate>
+      <max_step_size>0.01</max_step_size>
+      <real_time_factor>5</real_time_factor>
+      <real_time_update_rate>500</real_time_update_rate>
             <gravity>0 0 -9.8</gravity>
 
     </physics>
@@ -76,12 +76,12 @@
     <include>
         <uri>model://demo_line</uri>
         <name>demo_line</name>
-        <pose>0 -12.5 3 0 0 0</pose>
+        <pose>0 -7.5 3 0 0 0</pose>
     </include>
     <include>
         <uri>model://demo_line</uri>
         <name>previous_line</name>
-        <pose>8 9.5 3 0 0 -0.698131701</pose>
+        <pose>4.8 5.7 3 0 0 -0.698131701</pose>
     </include>
     <gui fullscreen="0">
       <camera name="user_camera">
