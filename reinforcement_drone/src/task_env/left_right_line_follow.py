@@ -1,3 +1,4 @@
+from typing_extensions import Self
 import rospy
 import numpy
 from gym import spaces
@@ -15,7 +16,7 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         )
 
     def __init__(self):
-
+        self.stop_counter = 0
         # Only variable needed to be set here
         number_actions = rospy.get_param('/drone/n_actions')
         self.action_space = spaces.Discrete(number_actions)
@@ -95,7 +96,9 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         self.not_ending_point_reward = rospy.get_param(
             "/drone/not_ending_point_reward")
         self.end_episode_points = rospy.get_param("/drone/end_episode_points")
-
+        self.max_consequent_stops = rospy.get_param('/drone/max_consequent_stops')
+        self.stopped_punishment = rospy.get_param('/drone/stopped_punishment')
+        self.bad_direction_punishment = rospy.get_param('/drone/bad_direction_punishment')
         self.cumulated_steps = 0.0
 
         # Here we will add any init functions prior to starting the MyRobotEnv
@@ -150,10 +153,13 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         if action == 0:  # STRAFE_LEFT
             linear_speed_vector.y = self.linear_forward_speed
             self.last_action = "STRAFE_LEFT"
+            self.stop_counter = 0
         elif action == 1:  # STRAFE_RIGHT
             linear_speed_vector.y = -1*self.linear_forward_speed
             self.last_action = "STRAFE_RIGHT"
+            self.stop_counter = 0
         elif action == 2:  # STOP
+            self.stop_counter = self.stop_counter + 1
             # linear_speed_vector.y = -1*self.linear_forward_speed
             self.last_action = "STOP"
         
@@ -164,7 +170,7 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
                        epsilon=0.05,
                        update_rate=60)
 
-        rospy.logdebug("END Set Action ==>"+str(action))
+        rospy.logwarn("END Set Action ==>"+str(action))
 
     def _get_obs(self):
         """
@@ -178,11 +184,9 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         gt_pose = self.get_gt_pose()
 
         # We get the orientation of the cube in RPY
-        roll, pitch, yaw = self.get_orientation_euler(gt_pose.orientation)
+        roll, _, _ = self.get_orientation_euler(gt_pose.orientation)
 
-        # We get the sonar value
-        sonar = self.get_sonar()
-        sonar_value = sonar.range
+     
 
         """
         observations = [    round(gt_pose.position.x, 1),
@@ -194,13 +198,7 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
                             round(sonar_value,1)]
         """
         # We simplify a bit the spatial grid to make learning faster
-        observations = [int(gt_pose.position.x),
-                        int(gt_pose.position.y),
-                        int(gt_pose.position.z),
-                        round(roll, 1),
-                        round(pitch, 1),
-                        round(yaw, 1),
-                        round(sonar_value, 1)]
+        observations = [int(gt_pose.position.y), round(roll, 1)]
 
         rospy.logdebug("Observations==>"+str(observations))
         rospy.logdebug("END Get Observation ==>")
@@ -216,54 +214,37 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         """
 
         episode_done = False
-
+        self.info = {}
         current_position = Point()
-        current_position.x = observations[0]
-        current_position.y = observations[1]
-        current_position.z = observations[2]
+        current_position.y = observations[0]
 
         current_orientation = Point()
-        current_orientation.x = observations[3]
-        current_orientation.y = observations[4]
-        current_orientation.z = observations[5]
-
-        sonar_value = observations[6]
+        current_orientation.y = observations[1]
 
         is_inside_workspace_now = self.is_inside_workspace(current_position)
-        sonar_detected_something_too_close_now = self.sonar_detected_something_too_close(
-            sonar_value)
-        drone_flipped = self.drone_has_flipped(current_orientation)
+        # drone_flipped = self.drone_has_flipped(current_orientation)
         has_reached_des_point = self.is_in_desired_position(
             current_position, self.desired_point_epsilon)
 
         rospy.logwarn(">>>>>> DONE RESULTS <<<<<")
         if not is_inside_workspace_now:
+            self.info = {'message':'outside_geofence'}
             rospy.logerr("is_inside_workspace_now=" +
                          str(is_inside_workspace_now))
+            rospy.logerr(current_position)
         else:
             rospy.logwarn("is_inside_workspace_now=" +
                           str(is_inside_workspace_now))
 
-        if sonar_detected_something_too_close_now:
-            rospy.logerr("sonar_detected_something_too_close_now=" +
-                         str(sonar_detected_something_too_close_now))
-        else:
-            rospy.logwarn("sonar_detected_something_too_close_now=" +
-                          str(sonar_detected_something_too_close_now))
-
-        if drone_flipped:
-            rospy.logerr("drone_flipped="+str(drone_flipped))
-        else:
-            rospy.logwarn("drone_flipped="+str(drone_flipped))
-
         if has_reached_des_point:
+            self.info = {'message':'reached_goal'}
             rospy.logerr("has_reached_des_point="+str(has_reached_des_point))
         else:
             rospy.logwarn("has_reached_des_point="+str(has_reached_des_point))
 
         # We see if we are outside the Learning Space
         episode_done = not(
-            is_inside_workspace_now) or sonar_detected_something_too_close_now or drone_flipped or has_reached_des_point
+            is_inside_workspace_now) or has_reached_des_point
 
         if episode_done:
             rospy.logerr("episode_done====>"+str(episode_done))
@@ -275,9 +256,7 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
     def _compute_reward(self, observations, done):
 
         current_position = Point()
-        current_position.x = observations[0]
-        current_position.y = observations[1]
-        current_position.z = observations[2]
+        current_position.y = observations[0]
 
         distance_from_des_point = self.get_distance_from_desired_point(
             current_position)
@@ -285,23 +264,26 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
             self.previous_distance_from_des_point
 
         if not done:
-
             # If there has been a decrease in the distance to the desired point, we reward it
             if distance_difference < 0.0:
                 rospy.logwarn("DECREASE IN DISTANCE GOOD")
                 reward = self.closer_to_point_reward
             else:
                 rospy.logwarn("INCREASE IN DISTANCE BAD")
-                reward = 0
+                reward = self.bad_direction_punishment
+
+            if self.stop_counter >= self.max_consequent_stops:
+                reward = reward + self.stopped_punishment
 
         else:
-
-            if self.is_in_desired_position(current_position, epsilon=0.5):
+            if self.is_in_desired_position(current_position, epsilon=self.desired_point_epsilon):
                 reward = self.end_episode_points
             else:
                 reward = -1*self.end_episode_points
 
         self.previous_distance_from_des_point = distance_from_des_point
+    
+
 
         rospy.logdebug("reward=" + str(reward))
         self.cumulated_reward += reward
@@ -320,31 +302,29 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
 
         is_in_desired_pos = False
 
-        x_pos_plus = self.desired_point.x + epsilon
-        x_pos_minus = self.desired_point.x - epsilon
-        y_pos_plus = self.desired_point.y + epsilon
-        y_pos_minus = self.desired_point.y - epsilon
+        y_pos_max = self.desired_point.y + epsilon
+        y_pos_min = self.desired_point.y - epsilon
 
-        x_current = current_position.x
         y_current = current_position.y
 
-        x_pos_are_close = (x_current <= x_pos_plus) and (
-            x_current > x_pos_minus)
-        y_pos_are_close = (y_current <= y_pos_plus) and (
-            y_current > y_pos_minus)
+        y_pos_are_close = (y_current <= y_pos_max) and (
+            y_current >= y_pos_min)
 
-        is_in_desired_pos = x_pos_are_close and y_pos_are_close
+        # I dont care about X
+        is_in_desired_pos = y_pos_are_close
+
 
         rospy.logwarn("###### IS DESIRED POS ? ######")
         rospy.logwarn("current_position"+str(current_position))
-        rospy.logwarn("x_pos_plus"+str(x_pos_plus) +
-                      ",x_pos_minus="+str(x_pos_minus))
-        rospy.logwarn("y_pos_plus"+str(y_pos_plus) +
-                      ",y_pos_minus="+str(y_pos_minus))
-        rospy.logwarn("x_pos_are_close"+str(x_pos_are_close))
+        rospy.logwarn("y_pos_max"+str(y_pos_max) +
+                      ",y_pos_min="+str(y_pos_min))
         rospy.logwarn("y_pos_are_close"+str(y_pos_are_close))
         rospy.logwarn("is_in_desired_pos"+str(is_in_desired_pos))
         rospy.logwarn("############")
+        rospy.logwarn(f"{y_current} <= {y_pos_max}")
+        rospy.logwarn(y_current <= y_pos_max)
+        rospy.logwarn(f"{y_current} >= {y_pos_min}")
+        rospy.logwarn(y_current >= y_pos_min)
 
         return is_in_desired_pos
 
@@ -355,57 +335,15 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         is_inside = False
 
         rospy.logwarn("##### INSIDE WORK SPACE? #######")
-        rospy.logwarn("XYZ current_position"+str(current_position))
-        rospy.logwarn("work_space_x_max"+str(self.work_space_x_max) +
-                      ",work_space_x_min="+str(self.work_space_x_min))
+        rospy.logwarn("Y current_position"+str(current_position))
         rospy.logwarn("work_space_y_max"+str(self.work_space_y_max) +
                       ",work_space_y_min="+str(self.work_space_y_min))
-        rospy.logwarn("work_space_z_max"+str(self.work_space_z_max) +
-                      ",work_space_z_min="+str(self.work_space_z_min))
         rospy.logwarn("############")
 
-        if current_position.x > self.work_space_x_min and current_position.x <= self.work_space_x_max:
-            if current_position.y > self.work_space_y_min and current_position.y <= self.work_space_y_max:
-                if current_position.z > self.work_space_z_min and current_position.z <= self.work_space_z_max:
-                    is_inside = True
+        if current_position.y >= self.work_space_y_min and current_position.y <= self.work_space_y_max:
+            is_inside = True
 
         return is_inside
-
-    def sonar_detected_something_too_close(self, sonar_value):
-        """
-        Detects if there is something too close to the drone front
-        """
-        rospy.logwarn("##### SONAR TOO CLOSE? #######")
-        rospy.logwarn("sonar_value"+str(sonar_value) +
-                      ",min_sonar_value="+str(self.min_sonar_value))
-        rospy.logwarn("############")
-
-        too_close = sonar_value < self.min_sonar_value
-
-        return too_close
-
-    def drone_has_flipped(self, current_orientation):
-        """
-        Based on the orientation RPY given states if the drone has flipped
-        """
-        has_flipped = True
-
-        self.max_roll = rospy.get_param("/drone/max_roll")
-        self.max_pitch = rospy.get_param("/drone/max_pitch")
-
-        rospy.logwarn("#### HAS FLIPPED? ########")
-        rospy.logwarn("RPY current_orientation"+str(current_orientation))
-        rospy.logwarn("max_roll"+str(self.max_roll) +
-                      ",min_roll="+str(-1*self.max_roll))
-        rospy.logwarn("max_pitch"+str(self.max_pitch) +
-                      ",min_pitch="+str(-1*self.max_pitch))
-        rospy.logwarn("############")
-
-        if current_orientation.x > -1*self.max_roll and current_orientation.x <= self.max_roll:
-            if current_orientation.y > -1*self.max_pitch and current_orientation.y <= self.max_pitch:
-                has_flipped = False
-
-        return has_flipped
 
     def get_distance_from_desired_point(self, current_position):
         """
@@ -424,8 +362,8 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         :param p_end:
         :return:
         """
-        a = numpy.array((pstart.x, pstart.y, pstart.z))
-        b = numpy.array((p_end.x, p_end.y, p_end.z))
+        a = numpy.array((pstart.y))
+        b = numpy.array((p_end.y))
 
         distance = numpy.linalg.norm(a - b)
 
@@ -437,3 +375,6 @@ class LeftRightLineFollowEnv(drone_env.DroneEnv):
         self.fix_vertical_drift(self.work_space_z_min + 1, self.work_space_z_max - 1)
 
         self.fix_x_drift(self.work_space_x_min + 1, self.work_space_x_max - 1)
+
+    def _get_info(self):
+        return self.info

@@ -417,7 +417,7 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
         a way to know if its moving in the direction desired, because it would need
         to evaluate the diference in position and speed on the local reference.
         """
-        time.sleep(0.20)
+        time.sleep(0.25)
 
     def wait_until_twist_achieved(self, cmd_vel_value, epsilon, update_rate):
         """
@@ -543,7 +543,7 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
         if current_height > min and current_height < max:
             return
 
-        rospy.logerr('Fixing Height')
+        rospy.logwarn('Fixing Height')
         rate = rospy.Rate(60)
         cmd_vel_value = Twist()
         self._check_cmd_vel_pub_connection()
@@ -599,3 +599,5 @@ class DroneEnv(robot_gazebo_env.RobotGazeboEnv):
         self._cmd_vel_pub.publish(cmd_vel_value)
         rate.sleep()
 
+    def _get_info(self):
+        return {}

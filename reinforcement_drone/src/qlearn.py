@@ -1,8 +1,4 @@
-'''
-Q-learning approach for different RL problems
-as part of the basic series on reinforcement learning @
-https://github.com/vmayoral/basic_reinforcement_learning
- 
+''' 
 Inspired by https://gym.openai.com/evaluations/eval_kWknKOkPQ7izrixdhriurA
  
         @author: Victor Mayoral Vilches <victor@erlerobotics.com>

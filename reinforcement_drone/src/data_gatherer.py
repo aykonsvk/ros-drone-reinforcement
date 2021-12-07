@@ -8,7 +8,7 @@ import rospy
 
 class DataGatherer:
     df_columns = ['episode', 'steps', 'reward',
-                  'alpha', 'gamma', 'epsilon', 'time']
+                  'alpha', 'gamma', 'epsilon', 'time', 'info']
     mainDF = None
     checkpointDF = None
     start_episode_number = 0
@@ -45,7 +45,8 @@ class DataGatherer:
         alpha: float,
         gamma: float,
         epsilon: float,
-        time: datetime.timedelta
+        time: datetime.timedelta,
+        info: dict
     ) -> None:
         if self.checkpointDF is None:
             self.create_checkpoint()
@@ -58,7 +59,8 @@ class DataGatherer:
                 'alpha': alpha,
                 'gamma': gamma,
                 'epsilon': epsilon,
-                'time': str((time + self.start_time_difference))
+                'time': str((time + self.start_time_difference)),
+                'info' : str(info)
             },
             ignore_index=True
         )

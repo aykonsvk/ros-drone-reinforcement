@@ -3,7 +3,7 @@
 import gym
 import numpy
 import time
-import qlearn
+import sarsa
 from gym import wrappers
 from data_gatherer import DataGatherer
 # ROS packages required
@@ -16,7 +16,7 @@ import datetime
 
 if __name__ == '__main__':
 
-    rospy.init_node('left_right_qlearn',
+    rospy.init_node('left_right_sarsa',
                     anonymous=True, log_level=rospy.ERROR)
 
     env = gym.make("LeftRightLineFollowEnv-v0")
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     rospack.list()
 
     pkg_path = rospack.get_path('reinforcement_drone')
-    outdir = pkg_path + '/training_results/qlearn/left_right'
+    outdir = pkg_path + '/training_results/sarsa/left_right'
     # Remove all data start from scratch
     env = wrappers.Monitor(env, outdir, force=True)
     # observation = env.reset()
@@ -52,14 +52,14 @@ if __name__ == '__main__':
     check_rate = rospy.get_param("/drone/check_rate")
 
     # Initialises the algorithm that we are going to use for learning
-    qlearn = qlearn.QLearn(actions=range(env.action_space.n),
+    qlearn = sarsa.Sarsa(actions=range(env.action_space.n),
                            alpha=Alpha, gamma=Gamma, epsilon=Epsilon)
     initial_epsilon = qlearn.epsilon
 
     start_time = time.time()
     highest_reward = 0
     # Check if it already exists a training policy, and load it if so
-    qfile = os.path.join(outdir, "qlearn_states.npy")
+    qfile = os.path.join(outdir, "sarsa_states.npy")
     # qfile = "qlearn_states.npy"
     if (os.path.exists(qfile)):
         print("Loading from file:", qfile)
@@ -110,7 +110,7 @@ if __name__ == '__main__':
                           str(cumulated_reward))
             rospy.logwarn(
                 "# State in which we will start next step=>" + str(nextState))
-            qlearn.learn(state, action, reward, nextState)
+            qlearn.learn(state, action, reward, nextState, qlearn.chooseAction(nextState))
 
             steps_count = steps_count+1
 
