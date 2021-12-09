@@ -3,9 +3,5 @@ dev_notes.md
 drone_v0/*
 
 
-reinforcement_drone/training_results/qlearn/left_right/*
-reinforcement_drone/training_results/sarsa/left_right/*
-
-
 */__pycache__/*
 *.pyc
