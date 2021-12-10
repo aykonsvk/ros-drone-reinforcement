@@ -3,7 +3,7 @@
 import gym
 import numpy
 import time
-import qlearn
+import algorithms.qlearn as qlearn
 from gym import wrappers
 from data_gatherer import DataGatherer
 # ROS packages required

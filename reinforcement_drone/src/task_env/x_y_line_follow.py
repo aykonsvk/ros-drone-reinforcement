@@ -69,21 +69,25 @@ class XYLineFollowEnv(drone_env.DroneEnv):
         self.x_distance_epsilon = rospy.get_param('/drone/x_distance_epsilon')
         # We place the Maximum and minimum values of the X,Y,Z,R,P,Yof the pose
 
-        high = numpy.array([self.work_space_x_max,
-                            self.work_space_y_max,
-                            self.work_space_z_max,
-                            self.max_roll,
-                            self.max_pitch,
-                            self.max_yaw,
-                            self.max_sonar_value])
+        high = numpy.array([
+            self.work_space_x_max,
+            self.work_space_y_max,
+            self.max_roll,
+            self.max_pitch,
+            numpy.linalg.norm(self.work_space_x_min - 0),
+            self.desired_point.x,
+            self.desired_point.y,
+        ])
 
-        low = numpy.array([self.work_space_x_min,
-                           self.work_space_y_min,
-                           self.work_space_z_min,
-                           -1*self.max_roll,
-                           -1*self.max_pitch,
-                           -numpy.inf,
-                           self.min_sonar_value])
+        low = numpy.array([
+            self.work_space_x_min,
+            self.work_space_y_min,
+            -1*self.max_roll,
+            -1*self.max_pitch,
+            numpy.linalg.norm(self.work_space_x_max - 0),
+            self.desired_point.x,
+            self.desired_point.y,
+        ])
 
         self.observation_space = spaces.Box(low, high)
 
@@ -217,7 +221,10 @@ class XYLineFollowEnv(drone_env.DroneEnv):
             int(gt_pose.position.y),
             round(roll, 1),
             round(pitch, 1),
-            self.get_x_distance_from_desired_line(gt_pose.position)
+            self.get_x_distance_from_desired_line(gt_pose.position),
+            self.desired_point.x,
+            self.desired_point.y,
+
         ]
 
         rospy.logdebug("Observations==>"+str(observations))
@@ -309,7 +316,7 @@ class XYLineFollowEnv(drone_env.DroneEnv):
                 reward = reward + self.x_distance_reward
             else:
                 reward = reward + self.x_distance_punishment
-            
+
             # Punish for staying at same spot
             if self.stop_counter >= self.max_consequent_stops:
                 reward = reward + self.stopped_punishment

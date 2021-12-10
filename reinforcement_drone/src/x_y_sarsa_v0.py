@@ -3,7 +3,7 @@
 import gym
 import numpy
 import time
-import sarsa
+import algorithms.sarsa as sarsa
 from gym import wrappers
 from data_gatherer import DataGatherer
 # ROS packages required
