@@ -302,6 +302,9 @@ class XYLineFollowEnv(drone_env.DroneEnv):
             if distance_difference < 0.0:
                 rospy.logwarn("DECREASE IN DISTANCE GOOD")
                 reward = self.closer_to_point_reward
+            elif distance_difference < 0.25:
+                rospy.logwarn("NO DECREASE IN DISTANCE (X adjustments)")
+                reward = 0
             else:
                 rospy.logwarn("INCREASE IN DISTANCE BAD")
                 reward = self.bad_direction_punishment

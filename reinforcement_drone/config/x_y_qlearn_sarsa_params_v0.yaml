@@ -47,8 +47,8 @@ drone: #namespace
     desired_point_epsilon: 2.0 # Error acceptable to consider that it has reached the desired point
     x_distance_epsilon: 1.5 # Error acceptable to consider distance from cable
 
-    x_distance_reward: 0
-    x_distance_punishment: -5
+    x_distance_reward: 3
+    x_distance_punishment: -10
     bad_direction_punishment: -1
     max_consequent_stops: 3
     stopped_punishment: -10
@@ -81,3 +81,8 @@ drone: #namespace
 # closer_to_point_reward: 5 # We give points for getting closer to the desired point
 # not_ending_point_reward: 0 # Points given if we just dont crash
 # end_episode_points: 400 # Points given when ending an episode
+
+
+#repaired_obs
+#x_distance_reward: 0
+#x_distance_punishment: -5
