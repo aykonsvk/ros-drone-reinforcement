@@ -187,7 +187,7 @@ class XYLineFollowEnv(drone_env.DroneEnv):
                        angular_speed,
                        epsilon=0.05,
                        update_rate=60)
-
+        rospy.logwarn(self.last_action)
         rospy.logwarn("END Set Action ==>"+str(action))
 
     def _get_obs(self):
@@ -217,8 +217,8 @@ class XYLineFollowEnv(drone_env.DroneEnv):
         # Added distance from the cable as observation
         # We simplify a bit the spatial grid to make learning faster
         observations = [
-            int(gt_pose.position.x),
-            int(gt_pose.position.y),
+            gt_pose.position.x,
+            gt_pose.position.y,
             round(roll, 1),
             round(pitch, 1),
             self.get_x_distance_from_desired_line(gt_pose.position),
@@ -302,9 +302,6 @@ class XYLineFollowEnv(drone_env.DroneEnv):
             if distance_difference < 0.0:
                 rospy.logwarn("DECREASE IN DISTANCE GOOD")
                 reward = self.closer_to_point_reward
-            elif distance_difference < 0.25:
-                rospy.logwarn("NO DECREASE IN DISTANCE (X adjustments)")
-                reward = 0
             else:
                 rospy.logwarn("INCREASE IN DISTANCE BAD")
                 reward = self.bad_direction_punishment

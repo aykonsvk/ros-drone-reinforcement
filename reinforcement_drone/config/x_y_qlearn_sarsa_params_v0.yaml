@@ -20,7 +20,7 @@ drone: #namespace
       y: 0.0
       z: 0.0
 
-    init_angular_turn_speed: 0.0 # Initial angular speed in shich we start each episode
+    init_angular_turn_speed: 0.0 # Initial angular speed in which we start each episode
 
 
     min_sonar_value: 0.5 # Minimum meters below wich we consider we have crashed
@@ -45,17 +45,50 @@ drone: #namespace
 
 
     desired_point_epsilon: 2.0 # Error acceptable to consider that it has reached the desired point
-    x_distance_epsilon: 1.5 # Error acceptable to consider distance from cable
+    x_distance_epsilon: 1.0 # Error acceptable to consider distance from cable
 
-    x_distance_reward: 3
-    x_distance_punishment: -10
-    bad_direction_punishment: -1
+    x_distance_reward: 0
+    x_distance_punishment: -5
+    bad_direction_punishment: -5
     max_consequent_stops: 3
     stopped_punishment: -10
 
-    closer_to_point_reward: 5 # We give points for getting closer to the desired point
+    closer_to_point_reward: 6 # We give points for getting closer to the desired point
     not_ending_point_reward: 0 # Points given if we just dont crash
-    end_episode_points: 400 # Points given when ending an episode
+    end_episode_points: 500 # Points given when ending an episode
+
+
+#NOT WORKING WELL (v10)
+#next step s to not reward for X
+# desired_point_epsilon: 2.0 # Error acceptable to consider that it has reached the desired point
+# x_distance_epsilon: 1.5 # Error acceptable to consider distance from cable
+
+# x_distance_reward: 2
+# x_distance_punishment: -5
+# bad_direction_punishment: -5
+# max_consequent_stops: 3
+# stopped_punishment: -10
+
+# closer_to_point_reward: 6 # We give points for getting closer to the desired point
+# not_ending_point_reward: 0 # Points given if we just dont crash
+# end_episode_points: 500 # Points given when ending an episode
+
+
+
+
+#int_init_precision + not changing epsilon
+# desired_point_epsilon: 2.0 # Error acceptable to consider that it has reached the desired point
+# x_distance_epsilon: 1.5 # Error acceptable to consider distance from cable
+
+# x_distance_reward: 3
+# x_distance_punishment: -10
+# bad_direction_punishment: -1
+# max_consequent_stops: 3
+# stopped_punishment: -10
+
+# closer_to_point_reward: 5 # We give points for getting closer to the desired point
+# not_ending_point_reward: 0 # Points given if we just dont crash
+# end_episode_points: 400 # Points given when ending an episode
 
 
 
