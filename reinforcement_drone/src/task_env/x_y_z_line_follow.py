@@ -11,8 +11,8 @@ from geometry_msgs.msg import Vector3
 class XYZLineFollowEnv(drone_env.DroneEnv):
 
     register(
-        id='XYLineFollowEnv-v0',
-        entry_point='task_env.x_y__z_line_follow:XYZLineFollowEnv',
+        id='XYZLineFollowEnv-v0',
+        entry_point='task_env.x_y_z_line_follow:XYZLineFollowEnv',
         max_episode_steps=rospy.get_param('/drone/nepisodes'),
     )
 
@@ -67,23 +67,35 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
         self.desired_point_epsilon = rospy.get_param(
             "/drone/desired_point_epsilon")
         self.x_distance_epsilon = rospy.get_param('/drone/x_distance_epsilon')
+        self.z_distance_epsilon = rospy.get_param('/drone/z_distance_epsilon')
+
         # We place the Maximum and minimum values of the X,Y,Z,R,P,Yof the pose
 
-        high = numpy.array([self.work_space_x_max,
-                            self.work_space_y_max,
-                            self.work_space_z_max,
-                            self.max_roll,
-                            self.max_pitch,
-                            self.max_yaw,
-                            self.max_sonar_value])
+        high = numpy.array([
+            self.work_space_x_max,
+            self.work_space_y_max,
+            self.work_space_z_max,
+            self.max_roll,
+            self.max_pitch,
+            numpy.linalg.norm(self.work_space_x_min - 0),
+            self.max_sonar_value,
+            self.desired_point.x,
+            self.desired_point.y,
+            self.desired_point.z,
+        ])
 
-        low = numpy.array([self.work_space_x_min,
-                           self.work_space_y_min,
-                           self.work_space_z_min,
-                           -1*self.max_roll,
-                           -1*self.max_pitch,
-                           -numpy.inf,
-                           self.min_sonar_value])
+        low = numpy.array([
+            self.work_space_x_min,
+            self.work_space_y_min,
+            self.work_space_z_min,
+            -1*self.max_roll,
+            -1*self.max_pitch,
+            numpy.linalg.norm(self.work_space_x_max - 0),
+            self.min_sonar_value,
+            self.desired_point.x,
+            self.desired_point.y,
+            self.desired_point.z,
+        ])
 
         self.observation_space = spaces.Box(low, high)
 
@@ -106,6 +118,10 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
             'drone/x_distance_punishment')
         self.x_distance_reward = rospy.get_param(
             'drone/x_distance_reward')
+        self.z_distance_punishment = rospy.get_param(
+            'drone/z_distance_punishment')
+        self.z_distance_reward = rospy.get_param(
+            'drone/z_distance_reward')
         self.cumulated_steps = 0.0
 
         # Here we will add any init functions prior to starting the MyRobotEnv
@@ -191,7 +207,7 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
                        angular_speed,
                        epsilon=0.05,
                        update_rate=60)
-
+        rospy.logwarn(self.last_action)
         rospy.logwarn("END Set Action ==>"+str(action))
 
     def _get_obs(self):
@@ -221,13 +237,16 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
         # Added distance from the cable as observation
         # We simplify a bit the spatial grid to make learning faster
         observations = [
-            int(gt_pose.position.x),
-            int(gt_pose.position.y),
-            int(gt_pose.position.z),
+            gt_pose.position.x,
+            gt_pose.position.y,
+            gt_pose.position.z,
             round(roll, 1),
             round(pitch, 1),
-            self.get_x_distance_from_desired_line(gt_pose.position)
-            self.get_z_distance_from_desired_line(gt_pose.position)
+            self.get_x_distance_from_desired_line(gt_pose.position),
+            self.get_z_distance_from_desired_line(gt_pose.position),
+            self.desired_point.x,
+            self.desired_point.y,
+            self.desired_point.z,
         ]
 
         rospy.logdebug("Observations==>"+str(observations))
@@ -250,14 +269,12 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
         current_position.y = observations[1]
         current_position.z = observations[2]
 
-
         current_orientation = Point()
         current_orientation.x = observations[3]
         current_orientation.y = observations[4]
 
         x_distance_from_cable = observations[5]
         z_distance_from_cable = observations[6]
-
 
         is_inside_workspace_now = self.is_inside_workspace(current_position)
         # drone_flipped = self.drone_has_flipped(current_orientation)
@@ -298,10 +315,9 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
         current_position.y = observations[1]
         current_position.z = observations[2]
 
-
         x_distance_from_cable = observations[5]
         z_distance_from_cable = observations[6]
-        
+
         distance_from_des_point = self.get_distance_from_desired_point(
             current_position)
         distance_difference = distance_from_des_point - \
@@ -331,7 +347,7 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
                 reward = reward + self.z_distance_reward
             else:
                 reward = reward + self.z_distance_punishment
-            
+
             # Punish for staying at same spot
             if self.stop_counter >= self.max_consequent_stops:
                 reward = reward + self.stopped_punishment
@@ -433,7 +449,8 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
         z_current = coordinates.z
         z_pos_max = self.desired_point.z + self.z_distance_epsilon
         z_pos_min = self.desired_point.z - self.z_distance_epsilon
-        return (z_current <= z_pos_max) and (z_current >= z_pos_min) evaluate this!!!!!!
+       
+        return (z_current <= z_pos_max) and (z_current >= z_pos_min)
 
     def get_x_distance_from_desired_line(self, current_position):
         # Here was code from the depth sensor (removed due to time and resources constrains (a lot of data))
@@ -442,9 +459,10 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
 
     def get_z_distance_from_desired_line(self, current_position):
         # Here was code from the camera sensor (removed due to time and resources constrains (a lot of data))
-        # simple CV checking if cable is on top of the image or bottom (in real life this would need impovements based on the pitch axis)       
+        # simple CV checking if cable is on top of the image or bottom (in real life this would need impovements based on the pitch axis)
         #  # I did simple calculation instead cable is at z=3
-         return numpy.linalg.norm(current_position.z - 3) evaluate this!!!!!!
+
+        return numpy.linalg.norm(current_position.z - 3)
 
     def get_distance_from_point(self, pstart, p_end):
         """
@@ -452,8 +470,8 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
         :param p_end:
         :return:
         """
-        a = numpy.array((pstart.x, pstart.y))
-        b = numpy.array((p_end.x, p_end.y))
+        a = numpy.array((pstart.x, pstart.y, pstart.z))
+        b = numpy.array((p_end.x, p_end.y, p_end.z))
 
         distance = numpy.linalg.norm(a - b)
 

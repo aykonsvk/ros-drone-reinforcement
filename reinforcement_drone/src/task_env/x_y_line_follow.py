@@ -224,7 +224,6 @@ class XYLineFollowEnv(drone_env.DroneEnv):
             self.get_x_distance_from_desired_line(gt_pose.position),
             self.desired_point.x,
             self.desired_point.y,
-
         ]
 
         rospy.logdebug("Observations==>"+str(observations))

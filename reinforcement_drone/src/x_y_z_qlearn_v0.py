@@ -3,7 +3,7 @@
 import gym
 import numpy
 import time
-import reinforcement_drone.src.algorithms.qlearn as qlearn
+import algorithms.qlearn as qlearn
 from gym import wrappers
 from data_gatherer import DataGatherer
 # ROS packages required
@@ -122,7 +122,7 @@ if __name__ == '__main__':
                 last_time_steps = numpy.append(last_time_steps, [int(i + 1)])
                 break
             rospy.logwarn("############### END Step=>" + str(i))
-            # input("Next Step...PRESS KEY")
+            #input("Next Step...PRESS KEY")
             # rospy.sleep(2.0)
         
         rospy.logerr(info)
