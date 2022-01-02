@@ -2,7 +2,7 @@ drone: #namespace
     #qlearn parameters
     alpha: 0.1
     gamma: 0.7
-    epsilon: 0.33
+    epsilon: 0.9
     epsilon_discount: 0.999
     nepisodes: 1000
     nsteps: 1000

@@ -1,0 +1,113 @@
+drone: #namespace
+    # DeepQ Parameters
+    gamma: 0.95
+    lr: 1e-3 # learning rate for adam optimizer
+    batch_size: 32
+    eps: 1.0
+    eps_decay: 0.995
+    eps_min: 0.01
+    nepisodes: 500
+    check_rate: 2
+
+    n_actions: 5 # We have 3 actions, TurnLeft,TurnRight, STOP, Forward, Backward
+
+    linear_forward_speed: 0.5 # Spwwed for ging fowards
+    angular_turn_speed: 0.05 # Angular speed when turning
+    angular_speed: 0.3 # Angular speed when turning Left or Right
+
+    init_linear_speed_vector:
+      x: 0.0
+      y: 0.0
+      z: 0.0
+
+    init_angular_turn_speed: 0.0 # Initial angular speed in which we start each episode
+
+
+    min_sonar_value: 0.5 # Minimum meters below wich we consider we have crashed
+    max_sonar_value: 5.0 # This can be retrieved form the sonar topic
+
+    work_space: # 3D cube in which Drone is allowed to move
+      x_max: -1.5
+      x_min: -8.0
+      y_max: 2.0
+      y_min: -15.0
+      z_max: 5.0
+      z_min: 1.5
+
+    max_roll: 1.57 # Max roll after which we end the episode
+    max_pitch: 1.57 # Max roll after which we end the episode
+    max_yaw: inf # Max yaw, its 4 because its bigger the pi, its a complete turn actually the maximum
+
+    desired_pose:
+      x: -5.0
+      y: -12.0
+      z: 3.0
+
+
+    desired_point_epsilon: 2.0 # Error acceptable to consider that it has reached the desired point
+    x_distance_epsilon: 1.0 # Error acceptable to consider distance from cable
+
+    x_distance_reward: 0
+    x_distance_punishment: -5
+    bad_direction_punishment: -5
+    max_consequent_stops: 3
+    stopped_punishment: -10
+
+    closer_to_point_reward: 6 # We give points for getting closer to the desired point
+    not_ending_point_reward: 0 # Points given if we just dont crash
+    end_episode_points: 500 # Points given when ending an episode
+
+
+
+
+
+
+#### oldwronparam
+# no bad direction punish
+# no stopped punish
+# 500steps
+# closer_to_point_reward: 10 # We give points for getting closer to the desired point
+# not_ending_point_reward: 1 # Points given if we just dont crash
+# end_episode_points: 200 #
+## RESULT - goig back and forth resulted in many points so why go further? 
+
+
+#### old-nonstop-punishment
+# removed reward for not crashing,.. hard to crash only with y axis
+# lowered amount of steps
+# increased end reward
+# decreased closer reward
+
+# closer_to_point_reward: 5 # We give points for getting closer to the desired point
+# not_ending_point_reward: 0 # Points given if we just dont crash
+# end_episode_points: 400 # Points given when ending an episode
+## RESULT - never discovered end goal, stopped and refused to move maybe playing save play??
+
+
+
+#### old-no-backstep-punish
+# added punishment for staying at one place too long
+
+# max_consequent_stops: 3
+# stopped_punishment: -10
+# closer_to_point_reward: 5 # We give points for getting closer to the desired point
+# not_ending_point_reward: 0 # Points given if we just dont crash
+# end_episode_points: 400 # Points given when ending an episode
+## Result drone is not using stop so often, but he is still flickering back and forth.
+
+
+
+#### FINAL
+#added small punishment for going in bad direction
+# bad_direction_punishment: -1
+# max_consequent_stops: 3
+# stopped_punishment: -10
+# closer_to_point_reward: 5 # We give points for getting closer to the desired point
+# not_ending_point_reward: 0 # Points given if we just dont crash
+# end_episode_points: 400 # Points given when ending an episode
+## Result drone figured the task super quickly (check if less steps)
+
+
+##### FINAL
+# change low high in observation, added goal to the observation(the goal is known)
+# no change in the params, only to the task env
