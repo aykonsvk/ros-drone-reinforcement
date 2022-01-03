@@ -383,13 +383,19 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
         y_pos_max = self.desired_point.y + epsilon
         y_pos_min = self.desired_point.y - epsilon
 
+        z_pos_max = self.desired_point.z + epsilon
+        z_pos_min = self.desired_point.z - epsilon
+
         x_current = current_position.x
         y_current = current_position.y
+        z_current = current_position.z
+
 
         x_pos_are_close = (x_current <= x_pos_max) and (x_current >= x_pos_min)
         y_pos_are_close = (y_current <= y_pos_max) and (y_current >= y_pos_min)
+        z_pos_are_close = (z_current <= z_pos_max) and (z_current >= z_pos_min)
 
-        is_in_desired_pos = x_pos_are_close and y_pos_are_close
+        is_in_desired_pos = x_pos_are_close and y_pos_are_close and z_pos_are_close
 
         rospy.logwarn("###### IS DESIRED POS ? ######")
         rospy.logwarn("current_position"+str(current_position))
@@ -419,7 +425,8 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
 
         if current_position.x >= self.work_space_x_min and current_position.x <= self.work_space_x_max:
             if current_position.y >= self.work_space_y_min and current_position.y <= self.work_space_y_max:
-                is_inside = True
+                if current_position.z >= self.work_space_z_min and current_position.z <= self.work_space_z_max:
+                    is_inside = True
 
         return is_inside
 
@@ -460,9 +467,8 @@ class XYZLineFollowEnv(drone_env.DroneEnv):
     def get_z_distance_from_desired_line(self, current_position):
         # Here was code from the camera sensor (removed due to time and resources constrains (a lot of data))
         # simple CV checking if cable is on top of the image or bottom (in real life this would need impovements based on the pitch axis)
-        #  # I did simple calculation instead cable is at z=3
-
-        return numpy.linalg.norm(current_position.z - 3)
+        #  # I did simple calculation instead cable is at z=3       
+        return current_position.z - 3
 
     def get_distance_from_point(self, pstart, p_end):
         """
