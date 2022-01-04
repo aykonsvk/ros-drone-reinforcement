@@ -15,6 +15,9 @@ The website above is using ROS  Melodic which is not natively supporting the Pyt
 - http://wiki.ros.org/noetic/Installation/Ubuntu
 
 
+## Documentation
+The pdf file ``Reinforcement learning for inspection path planning of linear infrastructures - Martin Janosik.pdf`` is providing a report for a work stated in this repository.
+
 ## Video demonstration:
 https://youtu.be/KY3iUWaR464
 
